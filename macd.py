@@ -7,52 +7,64 @@ def ema(data, n):
         raise ValueError("Invalid number of periods.")
     alpha = 2 / (n + 1)
     ema_values = [data[0]]
-    for i in range(1, len(data)):
+    for i in range(1, n):
         ema = alpha * data[i] + (1 - alpha) * ema_values[-1]
         ema_values.append(ema)
 
-    return ema_values
+    return ema_values[-1]
 
 
 df = pd.read_csv('wig20_2019-2024.csv')
 data = df['Zamkniecie'].tolist()
+data = data[:1035]
 print("data len " + str(len(data)))
 
-ema12 = ema(data, 12)
-print("ema12 len " + str(len(ema12)))
-ema26 = ema(data, 26)
-print("ema26 len " + str(len(ema26)))
-
 macd = []
-for i in range(len(ema12)):
-    macd.append(ema12[i] - ema26[i])
+signal = []
+for i in range(26, len(data)):
+    ema12 = ema(data[i - 12:i], 12)
+    ema26 = ema(data[i - 26:i], 26)
+    macd.append(ema12 - ema26)
 
-signal = ema(macd, 9)
+data = data[len(data)-1000:]
+print("data len " + str(len(data)))
+
+print("macd len " + str(len(macd)))
+
+for i in range(9, len(macd)):
+    signal.append(ema(macd[i - 9:i], 9))
+
+macd = macd[len(macd)-1000:]
+print("macd len " + str(len(macd)))
+print("signal len " + str(len(signal)))
 
 buy_points = [None]
 sell_points = [None]
 for i in range(1, len(macd)):
     if macd[i] > signal[i] and macd[i - 1] < signal[i - 1]:
-        buy_points.append(macd[i])
+        buy_points.append(signal[i])
     else:
         buy_points.append(None)
 
     if macd[i] < signal[i] and macd[i - 1] > signal[i - 1]:
-        sell_points.append(macd[i])
+        sell_points.append(signal[i])
     else:
         sell_points.append(None)
 
 print("buy_points len " + str(len(buy_points)))
 print("sell_points len " + str(len(sell_points)))
 
-indexes = list(range(len(data)))
 # Plotting
+
+indexes = list(range(len(data)))
+dates = df['Data'].tolist()[len(df['Data']) - 1000:]
 plt.figure(figsize=(18, 8))
 
 plt.subplot(2, 1, 1)
-plt.plot(df['Data'], data, label='Close Price', color='blue')
-plt.xticks(df['Data'][::100])
-plt.title('Close Price')
+plt.plot(dates, data,
+         label='Close Price', color='blue')
+plt.xticks(dates[::100])
+plt.title('WIG20 Close Price 2019-2024')
 plt.legend()
 
 plt.subplot(2, 1, 2)
