@@ -7,12 +7,15 @@ def ema(data, day_zero: int, n: int) -> float:
         raise ValueError("Invalid number of periods.")
 
     alpha = 2 / (n + 1)
-    ema_values = [data[day_zero - n]]
-    for i in range(day_zero - n, day_zero):
-        ema = alpha * data[i] + (1 - alpha) * ema_values[-1]
-        ema_values.append(ema)
+    alpha_complement = 1 - alpha
+    nominator, denominator = 0, 0
+    factor = 1
+    for i in range(n):
+        nominator += data[day_zero - i] * factor
+        denominator += factor
+        factor *= alpha_complement
 
-    return ema_values[-1]
+    return float(nominator / denominator)
 
 
 # Load data
@@ -65,12 +68,12 @@ print("sell_points len " + str(len(sell_points)))
 # Plot
 
 indices = list(range(len(data)))
-plt.figure(figsize=(16, 8))
+plt.figure(figsize=(12, 8))
 
 plt.subplot(2, 1, 1)
 plt.plot(dates, data,
          label='Close Price', color='blue')
-plt.xticks(dates[::100], rotation=45)
+plt.xticks(dates[::100])
 plt.title('WIG20 Close Price 2019-2024')
 plt.legend()
 
