@@ -18,73 +18,93 @@ def ema(data, day_zero: int, n: int) -> float:
     return float(nominator / denominator)
 
 
-# Load data
-df = pd.read_csv("dane.csv")
-dates = df['Data'].tolist()[len(df['Data']) - 1000:]
+def calc_macd_signal(data, short_ema_period, long_ema_period, signal_period):
+    macd = []
+    for i in range(long_ema_period, len(data)):
+        short_ema = ema(data, i, short_ema_period)
+        long_ema = ema(data, i, long_ema_period)
+        macd.append(short_ema - long_ema)
 
+    print("macd len " + str(len(macd)))
+
+    signal = []
+    for i in range(signal_period, len(macd)):
+        signal.append(ema(macd, i, signal_period))
+
+    print("trim to " + str(sample_length) + " elements")
+
+    data = data[len(data) - sample_length:]
+    print("data len " + str(len(data)))
+    macd = macd[len(macd) - sample_length:]
+    print("macd len " + str(len(macd)))
+    print("signal len " + str(len(signal)))
+
+    # Find buy and sell points
+    buy_points = [None]
+    sell_points = [None]
+    for i in range(1, len(macd)):
+        if macd[i] > signal[i] and macd[i - 1] < signal[i - 1]:
+            buy_points.append(signal[i])
+        else:
+            buy_points.append(None)
+
+        if macd[i] < signal[i] and macd[i - 1] > signal[i - 1]:
+            sell_points.append(signal[i])
+        else:
+            sell_points.append(None)
+
+    print("buy_points len " + str(len(buy_points)))
+    print("sell_points len " + str(len(sell_points)))
+    return macd, signal, buy_points, sell_points
+
+
+def plot_macd(data, macd, signal, buy_points, sell_points):
+    indices = list(range(len(data)))
+    plt.figure(figsize=(12, 8))
+
+    plt.subplot(2, 1, 1)
+    plt.plot(indices, data, label='Close Price', color='blue', linewidth=0.5)
+    plt.title("Financial instrument quotations")
+    plt.ylabel("Price")
+    plt.xlabel("Date")
+    plt.legend()
+
+    plt.subplot(2, 1, 2)
+    plt.plot(macd, label='MACD', color='blue', linewidth=0.5)
+    plt.plot(signal, label='SIGNAL', color='red', linewidth=0.5)
+    plt.scatter(indices, buy_points, color='green',
+                marker='^', label='Buy Signal')
+    plt.scatter(indices, sell_points, color='orange',
+                marker='v', label='Sell Signal')
+    plt.title('MACD, SIGNAL and buy/sell signals')
+    plt.ylabel('Value')
+    plt.xlabel('Day')
+    plt.legend()
+
+    plt.show()
+
+
+def run_macd(data, sample_length,
+             short_ema_period, long_ema_period, signal_period):
+    data = data[:sample_length + long_ema_period + signal_period]
+    print("data len " + str(len(data)))
+
+    macd, signal, buy_points, sell_points = calc_macd_signal(
+        data, short_ema_period, long_ema_period, signal_period)
+
+    data = data[:sample_length]
+    plot_macd(data, macd, signal, buy_points, sell_points)
+
+
+sample_length = 1000
+short_ema_period = 12
+long_ema_period = 26
+signal_period = 9
+
+df = pd.read_csv("wig20.csv")
 data = df['Zamkniecie'].tolist()
-data = data[:1035]
-print("data len " + str(len(data)))
+run_macd(data, sample_length, short_ema_period, long_ema_period, signal_period)
 
-
-# Calculate MACD and SIGNAL
-macd = []
-signal = []
-for i in range(26, len(data)):
-    ema12 = ema(data, i, 12)
-    ema26 = ema(data, i, 26)
-    macd.append(ema12 - ema26)
-
-print("macd len " + str(len(macd)))
-
-for i in range(9, len(macd)):
-    signal.append(ema(macd, i, 9))
-
-print("trim to 1000 elements")
-
-data = data[len(data)-1000:]
-print("data len " + str(len(data)))
-macd = macd[len(macd)-1000:]
-print("macd len " + str(len(macd)))
-print("signal len " + str(len(signal)))
-
-# Find buy and sell points
-buy_points = [None]
-sell_points = [None]
-for i in range(1, len(macd)):
-    if macd[i] > signal[i] and macd[i - 1] < signal[i - 1]:
-        buy_points.append(signal[i])
-    else:
-        buy_points.append(None)
-
-    if macd[i] < signal[i] and macd[i - 1] > signal[i - 1]:
-        sell_points.append(signal[i])
-    else:
-        sell_points.append(None)
-
-print("buy_points len " + str(len(buy_points)))
-print("sell_points len " + str(len(sell_points)))
-
-# Plot
-
-indices = list(range(len(data)))
-plt.figure(figsize=(12, 8))
-
-plt.subplot(2, 1, 1)
-plt.plot(dates, data,
-         label='Close Price', color='blue')
-plt.xticks(dates[::100])
-plt.title('WIG20 Close Price 2019-2024')
-plt.legend()
-
-plt.subplot(2, 1, 2)
-plt.plot(macd, label='MACD', color='blue')
-plt.plot(signal, label='SIGNAL', color='red')
-plt.scatter(indices, buy_points, color='green',
-            marker='^', label='Buy Signal')
-plt.scatter(indices, sell_points, color='orange',
-            marker='v', label='Sell Signal')
-plt.title('MACD, SIGNAL and buy/sell signals')
-plt.legend()
-
-plt.show()
+df = pd.read_csv("sax.csv")
+data = df['Zamkniecie'].tolist()
+run_macd(data, sample_length, short_ema_period, long_ema_period, signal_period)
