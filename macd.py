@@ -72,17 +72,60 @@ def plot_macd(data, macd, signal, buy_points, sell_points):
     plt.xlabel('Day')
     plt.legend()
 
+    plt.tight_layout()
     plt.show()
+
+
+def simulate_trading(data, macd, signal,
+                     buy_points, sell_points, sample_length):
+    starting_money = 1000
+    money = starting_money
+    max_money = money
+    min_money = money
+
+    stocks = 0
+    for i in range(1, sample_length):
+        if buy_points[i] is not None and money > 0:
+            print(f"Buying at {data[i]} day {i}")
+            stocks = money / data[i]
+            money = 0
+            print(f"Stocks: {stocks}")
+        elif sell_points[i] is not None and stocks > 0:
+            print(f"Selling at {data[i]} day {i}")
+            money = stocks * data[i]
+            if money > max_money:
+                max_money = money
+            if money < min_money:
+                min_money = money
+            stocks = 0
+            print(f"Money: {money}")
+
+    if stocks > 0:
+        money = stocks * data[sample_length - 1]
+
+    print()
+    print("Summary: ")
+    print(f"Starting money: {starting_money}")
+    print(f"Final money: {money:.2f}")
+    print(f"Max money: {max_money:.2f}")
+    print(f"Min money: {min_money:.2f}")
+    print(f"Profit: {(money - starting_money):.2f}")
+    print("Profit percentage: "
+          + f"{(((money - starting_money) / starting_money) * 100):.2f}"
+          + "%")
 
 
 def run_macd(data, sample_length,
              short_ema_period, long_ema_period, signal_period):
-    data = data[:sample_length + long_ema_period + signal_period]
+    data = data[len(data) - (sample_length + long_ema_period + signal_period):]
 
     macd, signal, buy_points, sell_points = calc_macd_signal(
         data, short_ema_period, long_ema_period, signal_period)
 
-    data = data[:sample_length]
+    simulate_trading(data, macd, signal, buy_points,
+                     sell_points, sample_length)
+
+    data = data[len(data) - sample_length:]
     plot_macd(data, macd, signal, buy_points, sell_points)
 
 
