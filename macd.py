@@ -25,19 +25,12 @@ def calc_macd_signal(data, short_ema_period, long_ema_period, signal_period):
         long_ema = ema(data, i, long_ema_period)
         macd.append(short_ema - long_ema)
 
-    print("macd len " + str(len(macd)))
-
     signal = []
     for i in range(signal_period, len(macd)):
         signal.append(ema(macd, i, signal_period))
 
-    print("trim to " + str(sample_length) + " elements")
-
     data = data[len(data) - sample_length:]
-    print("data len " + str(len(data)))
     macd = macd[len(macd) - sample_length:]
-    print("macd len " + str(len(macd)))
-    print("signal len " + str(len(signal)))
 
     # Find buy and sell points
     buy_points = [None]
@@ -53,8 +46,6 @@ def calc_macd_signal(data, short_ema_period, long_ema_period, signal_period):
         else:
             sell_points.append(None)
 
-    print("buy_points len " + str(len(buy_points)))
-    print("sell_points len " + str(len(sell_points)))
     return macd, signal, buy_points, sell_points
 
 
@@ -87,7 +78,6 @@ def plot_macd(data, macd, signal, buy_points, sell_points):
 def run_macd(data, sample_length,
              short_ema_period, long_ema_period, signal_period):
     data = data[:sample_length + long_ema_period + signal_period]
-    print("data len " + str(len(data)))
 
     macd, signal, buy_points, sell_points = calc_macd_signal(
         data, short_ema_period, long_ema_period, signal_period)
