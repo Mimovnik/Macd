@@ -102,6 +102,10 @@ def simulate_trading(data, macd, signal,
 
     if stocks > 0:
         money = stocks * data[sample_length - 1]
+        if money > max_money:
+            max_money = money
+        if money < min_money:
+            min_money = money
 
     print()
     print("Summary: ")
