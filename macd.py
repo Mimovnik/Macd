@@ -84,21 +84,34 @@ def simulate_trading(data, macd, signal,
     min_money = money
 
     stocks = 0
+    transactions = []
+    transactionCount = 0
+    cellColours = []
     for i in range(1, sample_length):
+        if buy_points[i] is None and sell_points[i] is None:
+            continue
         if buy_points[i] is not None and money > 0:
+            cellColours.append(["white"] * 6)
             print(f"Buying at {data[i]:.2f} day {i}")
             stocks = money / data[i]
             money = 0
             print(f"Stocks: {stocks}")
+            transactions.append(
+                (transactionCount, i, "Buy", data[i], money, stocks))
         elif sell_points[i] is not None and stocks > 0:
+            cellColours.append(["gray"] * 6)
             print(f"Selling at {data[i]:.2f} day {i}")
             money = stocks * data[i]
+            money = round(money, 2)
             if money > max_money:
                 max_money = money
             if money < min_money:
                 min_money = money
             stocks = 0
             print(f"Money: {money:.2f}")
+            transactions.append(
+                (transactionCount, i, "Sell", data[i], money, stocks))
+        transactionCount += 1
 
     if stocks > 0:
         money = stocks * data[sample_length - 1]
@@ -107,6 +120,21 @@ def simulate_trading(data, macd, signal,
         if money < min_money:
             min_money = money
 
+    fig, ax = plt.subplots(figsize=(12, 12))
+    # hide axes
+    fig.patch.set_visible(False)
+    ax.axis('off')
+    ax.axis('tight')
+    table = ax.table(cellText=transactions,
+                     colLabels=["Number", "Day", "Type",
+                                "Stock Price", "Money", "Stocks"],
+                     colWidths=[0.1, 0.1, 0.1, 0.2, 0.2, 0.3],
+                     cellLoc='center', cellColours=cellColours,  loc='center')
+    table.auto_set_font_size(False)
+    table.set_fontsize(6)
+    table.scale(0.5, 2)
+    fig.tight_layout()
+    plt.show()
     print()
     print("Summary: ")
     print(f"Starting money: {starting_money:.2f}")
