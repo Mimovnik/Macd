@@ -86,19 +86,19 @@ def simulate_trading(data, macd, signal,
     stocks = 0
     for i in range(1, sample_length):
         if buy_points[i] is not None and money > 0:
-            print(f"Buying at {data[i]} day {i}")
+            print(f"Buying at {data[i]:.2f} day {i}")
             stocks = money / data[i]
             money = 0
             print(f"Stocks: {stocks}")
         elif sell_points[i] is not None and stocks > 0:
-            print(f"Selling at {data[i]} day {i}")
+            print(f"Selling at {data[i]:.2f} day {i}")
             money = stocks * data[i]
             if money > max_money:
                 max_money = money
             if money < min_money:
                 min_money = money
             stocks = 0
-            print(f"Money: {money}")
+            print(f"Money: {money:.2f}")
 
     if stocks > 0:
         money = stocks * data[sample_length - 1]
@@ -109,7 +109,7 @@ def simulate_trading(data, macd, signal,
 
     print()
     print("Summary: ")
-    print(f"Starting money: {starting_money}")
+    print(f"Starting money: {starting_money:.2f}")
     print(f"Final money: {money:.2f}")
     print(f"Max money: {max_money:.2f}")
     print(f"Min money: {min_money:.2f}")
