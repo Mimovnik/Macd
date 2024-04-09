@@ -51,6 +51,31 @@ def calc_macd_signal(data, short_ema_period, long_ema_period, signal_period):
 
 def plot_macd(data, macd, signal, buy_points, sell_points):
     indices = list(range(len(data)))
+    buy_indices = []
+    for i in range(len(buy_points)):
+        if buy_points[i] is not None:
+            buy_indices.append(i)
+        else:
+            buy_indices.append(None)
+    sell_indices = []
+    for i in range(len(sell_points)):
+        if sell_points[i] is not None:
+            sell_indices.append(i)
+        else:
+            sell_indices.append(None)
+
+    plt.figure(figsize=(12, 8))
+
+    plt.plot(indices, data, label='Close Price', color='blue', linewidth=0.5)
+    plt.title("Financial instrument quotations")
+    plt.ylabel("Price")
+    plt.xlabel("Date")
+    plt.scatter(buy_indices, data, color='green',
+                marker='^', label='Buy Signal')
+    plt.scatter(sell_indices, data , color='orange',
+                marker='v', label='Sell Signal')
+    plt.legend()
+
     plt.figure(figsize=(12, 8))
 
     plt.subplot(2, 1, 1)
